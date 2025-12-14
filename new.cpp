@@ -386,4 +386,5 @@ int main(){
     tie(y,x,l)=ans[i];
     cout<<"("<<y<<","<<x<<") "<<l<<endl;
   }
+  return 0;
 }
