@@ -114,7 +114,6 @@ pair<int,int>find_pos(vvi&field,int y,int x,int size){
   }
 }
 
-
 // 通常の回転
 void kaiten(vvi&field,int y,int x,int size){
   vvi tmp(size,vi(size));
@@ -363,6 +362,42 @@ vector<tpi>solve(vvi&field,int size){
   ans.insert(ans.end(),ans3.begin(),ans3.end());
   return ans;
 }
+// 端に来た時の回転
+vector<tpi>special_kaiten(vvi&field,int size,int y,int x,int anoy,int anox){
+  vector<tpi>ret;
+  if(x==anox){
+    int diffy=anoy-y-1;
+    while(diffy--){
+      ret.push_back({y-1,x,2});
+      kaiten(field,y-1,x,2);
+      y--;
+    }
+    kaiten(field,y-1,x,2);
+    ret.push_back({y-1,x,2});
+  }else if(x<anox){
+    if(anoy==size-1){
+      kaiten(field,y-1,x-1,2);
+      ret.push_back({y-1,x-1,2});
+    }
+  }else{
+
+  }
+}
+
+vector<tpi>solve(vvi&field,int size){
+  vector<vector<tpi>>ans,ans1,ans2;
+  for(int i=0;i<size-4;i++){
+    for(int j=0;j<size;j++){
+      int y,x;
+      tie(y,x)=find_pos(field,i,j,size);
+      if(j==size-2){
+        ans1.push_back(special_kaiten(field,size,i,j,y,x));
+      }else{
+        ans1.push_back(normal_kaiten(field,size,i,j,y,x));
+      }
+    }
+  }
+}
 
 int main(){
   int n;
@@ -387,4 +422,5 @@ int main(){
     cout<<"("<<y<<","<<x<<") "<<l<<endl;
   }
   cout<<endl;
+
 }
