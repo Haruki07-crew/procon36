@@ -8,28 +8,19 @@ int dy[4]={0,0,1,-1};
 
 
 bool hantei(vvi&field){
-
   bool ok=true;
   int n=(int)field.size();
   for(int i=0;i<n-4;i++){
     for(int j=0;j<n;j+=2){
       if(field[i][j]!=field[i][j+1]){
-        // cout<<field[i][j]<<" "<<field[i][j+1];
         ok=false;
       }
-      cout<<endl;
     }
   }
   return ok;
 }
 // 安全な回転関数（範囲外なら終了）
 void safe_kaiten(vvi &field, int y, int x, int size, const string& func_name="unknown") {
-    int n = field.size();
-    if (y < 0 || x < 0 || y + size > n || x + size > n) {
-        cerr << "OUT OF RANGE in function " << func_name 
-             << ": y=" << y << " x=" << x << " size=" << size << " field_size=" << n << endl;
-        exit(1);  // 範囲外なら即終了
-    }
     vvi tmp(size, vi(size));
     for(int i=0;i<size;i++){
         for(int j=0;j<size;j++){
@@ -41,8 +32,6 @@ void safe_kaiten(vvi &field, int y, int x, int size, const string& func_name="un
             field[y+j][x+(size-1-i)] = tmp[i][j];
         }
     }
-    cout<<"[DEBUG] safe_kaiten executed in function " << func_name 
-        << ": y=" << y << " x=" << x << " size=" << size << endl;
 }
 
 // BFS用回転（safe版）
@@ -148,8 +137,7 @@ pair<int,int>find_pos(vvi&field,int y,int x,int size){
       }
     }
   }
-  cerr<<"見つかりません y="<<y<<" x="<<x<<endl;
-  exit(1);  // 見つからなければ終了
+
   return {-1,-1};
 }
 
@@ -219,6 +207,7 @@ vector<tpi>special_kaiten(vvi&field,int size,int y,int x,int anoy,int anox){
         while(diffy--){
             safe_kaiten(field,anoy-1,anox,2,"special_kaiten");
             ret.push_back({anoy-1,anox,2});
+            anoy--;
         }
     }
   }
@@ -235,10 +224,6 @@ vector<tpi>normal_kaiten(vvi&field,int size,int y,int x,int anoy,int anox){
       safe_kaiten(field,anoy-1,anox,2,"normal_kaiten1");
       anoy--;
     }
-    if(anoy!=y){
-      cerr<<"error in normal_kaiten : x==anox"<<endl;
-      exit(1);
-    }
   }else if(x<anox){
     if(x+1==anox&&y+1==anoy){
       safe_kaiten(field,anoy-1,anox,2,"normal_kaiten2");
@@ -254,7 +239,7 @@ vector<tpi>normal_kaiten(vvi&field,int size,int y,int x,int anoy,int anox){
         anox--;
       }
     }else{
-      int diffx=anox-x;
+      int diffx=anox-x-1;
       while(diffx--){
         safe_kaiten(field,anoy-1,anox-1,2,"normal_kaiten4");
         ret.push_back({anoy-1,anox-1,2});
@@ -262,23 +247,11 @@ vector<tpi>normal_kaiten(vvi&field,int size,int y,int x,int anoy,int anox){
       }
       int diffy=anoy-y;
       while(diffy--){
-        //  cerr << "[DEBUG normal_kaiten5] anoy=" << anoy 
-        //  << " anox=" << anox 
-        //  << " y=" << y 
-        //  << " x=" << x << "diffy="<< diffy<<endl;
         safe_kaiten(field,anoy-1,anox,2,"normal_kaiten5");
         ret.push_back({anoy-1,anox,2});
         anoy--;
       }
-      // if(anoy!=y||anox!=x){
-      //   cerr<<"error in normal_kaiten : x<anox"<<endl;
-      //   exit(1);
-      // }
     }
-    // if(anoy!=y||anox!=x){
-    //   cerr<<"error in normal_kaiten : x<anox"<<endl;
-    //   exit(1);
-    // }
   }else{
     if(anoy==size-1){
       safe_kaiten(field,anoy-1,anox,2,"normal_kaiten6");
@@ -292,18 +265,10 @@ vector<tpi>normal_kaiten(vvi&field,int size,int y,int x,int anoy,int anox){
       anox++;
     }
     int diffy=anoy-y;
-     cerr << "[DEBUG normal_kaiten8] anoy=" << anoy 
-         << " anox=" << anox 
-         << " y=" << y 
-         << " x=" << x << " diffy="<< diffy<<endl;
     while(diffy--){
       safe_kaiten(field,anoy-1,anox,2,"normal_kaiten8");
       ret.push_back({anoy-1,anox,2});
       anoy--;
-    }
-    if(anoy!=y||anox!=x){
-      cerr<<"error in normal_kaiten : else"<<endl;
-      exit(1);
     }
   }
   return ret;
@@ -321,7 +286,8 @@ vector<tpi>specific_kaiten(vvi&field,int size,int y,int x,int anoy,int anox){
   }else if(anoy==size-1){//下端
     if(x<anox){
       int diffx=anox-x-1;
-      safe_kaiten(field,anoy-1,anox-1,2,"specific_kaitenA");
+      if(x+1!=anox){
+              safe_kaiten(field,anoy-1,anox-1,2,"specific_kaitenA");
       ret.push_back({anoy-1,anox-1,2});
       anox--;
       diffx--;
@@ -329,6 +295,7 @@ vector<tpi>specific_kaiten(vvi&field,int size,int y,int x,int anoy,int anox){
         safe_kaiten(field,anoy-1,anox-1,2,"specific_kaitenB");
         ret.push_back({anoy-1,anox-1,2});
         anox--;
+      }
       }
       int diffy=anoy-y;
       while(diffy--){
@@ -340,15 +307,23 @@ vector<tpi>specific_kaiten(vvi&field,int size,int y,int x,int anoy,int anox){
         safe_kaiten(field,y,x,2,"specific_kaitenD");
         ret.push_back({y,x,2});
       }
+    }else if(x==anox){
+      int diffy=anoy-y-1;
+      while(diffy--){
+        safe_kaiten(field,anoy-1,anox,2,"specific_kaitenfiugjiugj");
+        ret.push_back({anoy-1,anox,2});
+        anoy--;
+      }
     }else{
-      int diffy=y-anoy-1;
+      int diffy=anoy-y-1;
       safe_kaiten(field,anoy-1,anox,2,"specific_kaitenE");
       ret.push_back({anoy-1,anox,2});
     }
   }else if(anoy==size-4){//上端
     if(y==anoy){
       int diffx=anox-x;
-      while(diffx--){
+      while(diffx>0){
+        diffx--;
         for(int i=0;i<3;i++){
           safe_kaiten(field,anoy,anox-1,2,"specific_kaitenF");
           ret.push_back({anoy,anox-1,2});
@@ -356,6 +331,13 @@ vector<tpi>specific_kaiten(vvi&field,int size,int y,int x,int anoy,int anox){
         anox--;
       }
     }else if(anox>x){
+      if(anox==size-1){
+        for(int i=0;i<3;i++){
+          safe_kaiten(field,anoy,anox-1,2,"specific_kaitenG");
+          ret.push_back({anoy,anox-1,2});
+        }
+        anox--;
+      }
       int diffy=y-anoy;
       while(diffy--){
         for(int i=0;i<3;i++){
@@ -364,6 +346,15 @@ vector<tpi>specific_kaiten(vvi&field,int size,int y,int x,int anoy,int anox){
         }
         anoy++;
       }
+      int diffx=anox-x-1;
+      while(diffx--){
+        for(int i=0;i<3;i++){
+        safe_kaiten(field,anoy,anox-1,2,"specific_kaitenH");
+        ret.push_back({anoy,anox-1,2});
+        }
+        anox--;
+
+      }
       for(int i=0;i<3;i++){
         safe_kaiten(field,y,x,2,"specific_kaitenH");
         ret.push_back({y,x,2});
@@ -371,10 +362,30 @@ vector<tpi>specific_kaiten(vvi&field,int size,int y,int x,int anoy,int anox){
     }
   }else{
     int diffx=anox-x-1;
-    while(diffx--){
+    while(diffx>0){
       safe_kaiten(field,anoy-1,anox-1,2,"specific_kaitenI");
       ret.push_back({anoy-1,anox-1,2});
       anox--;
+      diffx--;
+    }
+    if(y<anoy){
+      int diffy=anoy-y;
+      while(diffy>0){
+        diffy--;
+        safe_kaiten(field,anoy-1,anox,2,"specific_kaitenI1");
+        ret.push_back({anoy-1,anox,2});
+        anoy--;
+      }
+    }else if(y>anoy){
+      int diffy=y-anoy;
+      while(diffy>0){
+        diffy--;
+        for(int i=0;i<3;i++){
+          safe_kaiten(field,anoy,anox,2,"specific_kaitenI2");
+          ret.push_back({anoy,anox,2});
+        }
+        anoy++;
+      }
     }
     int diffy=anoy-y;
     while(diffy--){
@@ -386,90 +397,9 @@ vector<tpi>specific_kaiten(vvi&field,int size,int y,int x,int anoy,int anox){
       safe_kaiten(field,y,x,2,"specific_kaitenI3");
       ret.push_back({y,x,2});
     }
-    return ret;
 }
-
-
-
-
-
-
-
-  // if(anoy==size-4&&y!=anoy){
-  //   safe_kaiten(field,anoy,anox-1,2,"specific_kaiten1");
-  //   ret.push_back({anoy,anox-1,2});
-  //   anoy++;
-  // }
-  // if(y==anoy){
-  //   int diffx=anox-x;
-  //   while(diffx--){
-  //     for(int i=0;i<3;i++){
-  //       safe_kaiten(field,anoy,anox-1,2,"specific_kaiten2");
-  //       ret.push_back({anoy,anox-1,2});
-  //     }
-  //     anox--;
-  //   }
-  // }else if(x==anox){
-  //   int diffy=anoy-y;
-  //   while(diffy--){
-  //     cout<<"[DEBUG specific_kaiten] anoy="<<anoy<<" anox="<<anox<<" y="<<y<<" x="<<x<<" diffy="<<diffy<<endl;
-  //     safe_kaiten(field,anoy-1,anox,2,"specific_kaiten3");
-  //     ret.push_back({anoy-1,anox,2});
-  //     anoy--;
-  //   }
-  // }else{
-  //   if(x+1==anox&&y+1==anoy){
-  //     safe_kaiten(field,anoy-1,anox,2,"specific_kaiten4");
-  //     ret.push_back({anoy-1,anox,2});
-  //     for(int i=0;i<3;i++){
-  //       safe_kaiten(field,y,x,2,"specific_kaiten5");
-  //       ret.push_back({y,x,2});
-  //     }
-  //   }else if(anoy==size-1){
-  //     for(int i=0;i<2;i++){
-  //       safe_kaiten(field,anoy-1,anox-1,2,"specific_kaiten6");
-  //       ret.push_back({anoy-1,anox-1,2});
-  //     }
-  //     anoy--;
-  //     anox--;
-  //     int diffx=anox-x;
-  //     while(diffx--){
-  //       for(int i=0;i<3;i++){
-  //         safe_kaiten(field,anoy,anox-1,2,"specific_kaiten7");
-  //         ret.push_back({anoy,anox-1,2});
-  //       }
-  //       anox--;
-  //     }
-  //   }else{
-  //     int diffx=anox-x-1;
-  //     while(diffx--){
-  //       cout<<"[DEBUG specific_kaiten] anoy="<<anoy<<" anox="<<anox<<" y="<<y<<" x="<<x<<" diffx="<<diffx<<endl;
-  //       safe_kaiten(field,anoy-1,anox-1,2,"specific_kaiten8");
-  //       ret.push_back({anoy-1,anox-1,2});
-  //       anox--;
-  //     }
-  //     if(y<anoy){
-  //       for(int i=0;i<3;i++){
-  //         safe_kaiten(field,anoy,anox,2,"specific_kaiten9");
-  //         ret.push_back({anoy,anox,2});
-  //       }
-  //       for(int i=0;i<3;i++){
-  //         safe_kaiten(field,y,x,2,"specific_kaiten10");
-  //         ret.push_back({y,x,2});
-  //       }
-  //     }else{
-  //       safe_kaiten(field,anoy-1,anox,2,"specific_kaiten11");
-  //       ret.push_back({anoy-1,anox,2});
-  //       for(int i=0;i<3;i++){
-  //         safe_kaiten(field,y,x,2,"specific_kaiten12");
-  //         ret.push_back({y,x,2});
-  //       }
-  //     }
-  //   }
-  // }
   return ret;
 }
-
 // main_solve
 vector<tpi>solve(vvi&field,int size){
   vector<tpi>ans,ans1,ans2,ans3;
@@ -486,14 +416,6 @@ vector<tpi>solve(vvi&field,int size){
       }
     }
   }
-
-  for(int i=0;i<size;i++){
-    for(int j=0;j<size;j++){
-      cout<<field[i][j]<<" ";
-    }
-    cout<<endl;
-  }
-
   for(int j=0;j<size-4;j++){
     for(int i=size-4;i<size;i+=2){
       int y,x;
@@ -502,13 +424,6 @@ vector<tpi>solve(vvi&field,int size){
       ans2.insert(ans2.end(),v.begin(),v.end());
     }
   }
-  for(int i=0;i<size;i++){
-    for(int j=0;j<size;j++){
-      cout<<field[i][j]<<" ";
-    }
-    cout<<endl;
-  }
-
   ans3=main_bfs(field,size);
   ans.insert(ans.end(),ans1.begin(),ans1.end());
   ans.insert(ans.end(),ans2.begin(),ans2.end());
@@ -522,6 +437,7 @@ vector<tpi>solve(vvi&field,int size){
   }
   return ans;
 }
+
 
 int main(){
   int n;
@@ -547,4 +463,5 @@ int main(){
     }
     cout<<endl;
   }
+  cout<<"操作回数: "<<(int)ans.size()<<endl;
 }
